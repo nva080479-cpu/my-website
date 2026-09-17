@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Từ điển Sử - Địa · Việt-Pháp</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;1,400&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #24211B;
+    --ink-soft: #56503f;
+    --parchment: #F3EEE0;
+    --parchment-raised: #FBF8F0;
+    --brass: #A9793D;
+    --brass-soft: #cfa15f33;
+    --line: #ddd3ba;
+    --histoire: #8a3232;
+    --histoire-bg: #f3e4e0;
+    --geo: #2f5b45;
+    --geo-bg: #e2ede2;
+    --shadow: rgba(36,33,27,0.08);
+  }
+  :root:not([data-theme="light"]) {
+    @media (prefers-color-scheme: dark) {
+      --ink: #ECE6D6;
+      --ink-soft: #b8b09a;
+      --parchment: #1C1A15;
+      --parchment-raised: #262319;
+      --brass: #D9A65C;
+      --brass-soft: #d9a65c26;
+      --line: #3a3527;
+      --histoire: #d98686;
+      --histoire-bg: #3a2323;
+      --geo: #8fc0a3;
+      --geo-bg: #22332a;
+      --shadow: rgba(0,0,0,0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --ink: #ECE6D6;
+    --ink-soft: #b8b09a;
+    --parchment: #1C1A15;
+    --parchment-raised: #262319;
+    --brass: #D9A65C;
+    --brass-soft: #d9a65c26;
+    --line: #3a3527;
+    --histoire: #d98686;
+    --histoire-bg: #3a2323;
+    --geo: #8fc0a3;
+    --geo-bg: #22332a;
+    --shadow: rgba(0,0,0,0.35);
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--parchment);
+    color: var(--ink);
+    font-family: 'Spectral', Georgia, 'Times New Roman', serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .label {
+    font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+    letter-spacing: 0.02em;
+  }
+
+  .wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 40px 20px 80px;
+  }
+
+  header {
+    text-align: center;
+    padding-bottom: 28px;
+    margin-bottom: 28px;
+    border-bottom: 1px solid var(--line);
+  }
+  .mark {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.14em;
+    color: var(--brass);
+    margin-bottom: 14px;
+  }
+  .mark::before, .mark::after {
+    content: "";
+    height: 1px;
+    width: 28px;
+    background: var(--brass);
+    opacity: 0.6;
+  }
+  h1 {
+    font-size: 40px;
+    font-weight: 600;
+    margin: 0 0 6px;
+    line-height: 1.15;
+  }
+  h1 em {
+    color: var(--brass);
+    font-style: italic;
+  }
+  .sub {
+    font-size: 16px;
+    color: var(--ink-soft);
+    font-style: italic;
+    margin: 0;
+  }
+
+  .controls {
+    position: sticky;
+    top: 0;
+    background: var(--parchment);
+    padding: 14px 0 18px;
+    z-index: 5;
+  }
+  .search-row {
+    position: relative;
+    margin-bottom: 14px;
+  }
+  .search-row svg {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px; height: 18px;
+    stroke: var(--ink-soft);
+    pointer-events: none;
+  }
+  input[type="search"] {
+    width: 100%;
+    padding: 14px 16px 14px 46px;
+    font-family: 'Spectral', serif;
+    font-size: 17px;
+    color: var(--ink);
+    background: var(--parchment-raised);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  input[type="search"]::placeholder { color: var(--ink-soft); opacity: 0.7; }
+  input[type="search"]:focus {
+    border-color: var(--brass);
+    box-shadow: 0 0 0 3px var(--brass-soft);
+  }
+  input[type="search"]:focus-visible {
+    outline: 2px solid var(--brass);
+    outline-offset: 1px;
+  }
+
+  .filters {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .chip {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: 0.03em;
+    padding: 7px 16px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--parchment-raised);
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .chip:hover { border-color: var(--brass); color: var(--ink); }
+  .chip:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+  .chip[aria-pressed="true"] {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--parchment);
+  }
+  .chip[aria-pressed="true"].histoire { background: var(--histoire); border-color: var(--histoire); color: #fff; }
+  .chip[aria-pressed="true"].geo { background: var(--geo); border-color: var(--geo); color: #fff; }
+
+  .count {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px;
+    color: var(--ink-soft);
+    letter-spacing: 0.04em;
+    margin: 6px 2px 20px;
+  }
+
+  .card {
+    background: var(--parchment-raised);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--histoire);
+    border-radius: 2px;
+    padding: 20px 22px;
+    margin-bottom: 14px;
+    box-shadow: 0 1px 2px var(--shadow);
+  }
+  .card.geo { border-left-color: var(--geo); }
+
+  .card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+  .terms h2 {
+    font-size: 22px;
+    font-weight: 600;
+    margin: 0;
+    line-height: 1.3;
+  }
+  .terms .fr {
+    font-style: italic;
+    color: var(--brass);
+    font-size: 17px;
+    font-weight: 500;
+  }
+  .tag {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+    padding: 4px 10px;
+    border-radius: 999px;
+    color: var(--histoire);
+    background: var(--histoire-bg);
+  }
+  .card.geo .tag { color: var(--geo); background: var(--geo-bg); }
+
+  .def {
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--ink);
+    margin: 0 0 12px;
+  }
+  .example {
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    font-style: italic;
+    padding-left: 14px;
+    border-left: 2px solid var(--line);
+    margin: 0;
+  }
+
+  .empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--ink-soft);
+  }
+  .empty p:first-child {
+    font-size: 19px;
+    color: var(--ink);
+    margin-bottom: 6px;
+  }
+
+  footer {
+    text-align: center;
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12.5px;
+    letter-spacing: 0.03em;
+    color: var(--ink-soft);
+  }
+
+  @media (max-width: 480px) {
+    h1 { font-size: 32px; }
+    .wrap { padding: 28px 16px 60px; }
+    .card { padding: 16px 16px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="mark">TỪ ĐIỂN SONG NGỮ</div>
+    <h1>Sử <em>&</em> Địa</h1>
+    <p class="sub">Dictionnaire d'Histoire &amp; de Géographie · Việt–Pháp</p>
+  </header>
+
+  <div class="controls">
+    <div class="search-row">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      <input id="search" type="search" placeholder="Tìm thuật ngữ, ví dụ: cách mạng, climat…" autocomplete="off">
+    </div>
+    <div class="filters" role="group" aria-label="Lọc theo môn học">
+      <button class="chip" data-filter="all" aria-pressed="true">Tất cả</button>
+      <button class="chip histoire" data-filter="Lịch sử" aria-pressed="false">Lịch sử</button>
+      <button class="chip geo" data-filter="Địa lý" aria-pressed="false">Địa lý</button>
+    </div>
+  </div>
+
+  <p class="count" id="count"></p>
+  <div id="results"></div>
+
+  <footer>DỰ ÁN NCKHKT — TRƯỜNG THPT CHUYÊN CHU VĂN AN · NĂM HỌC 2026–2027</footer>
+</div>
+
+<script>
+  // ============================================================
+  // DỮ LIỆU MẪU — con hãy thay bằng bộ 100–150 thuật ngữ đã kiểm định
+  // ở Giai đoạn 2. Mỗi mục có cấu trúc giống nhau bên dưới.
+  // ============================================================
+  const DATA = [
+    { vn: "Cách mạng", fr: "révolution", subject: "Lịch sử", unit: "Bài 5 — Các cuộc cách mạng công nghiệp",
+      def: "Sự thay đổi to lớn, căn bản và nhanh chóng trong một lĩnh vực (chính trị, kinh tế, xã hội…), thường dẫn đến việc thay thế trật tự cũ bằng trật tự mới.",
+      ex: "La Révolution française de 1789 a mis fin à la monarchie absolue." },
+    { vn: "Chế độ phong kiến", fr: "féodalité", subject: "Lịch sử", unit: "Bài 2 — Thời kỳ trung đại",
+      def: "Hình thái xã hội dựa trên quan hệ giữa lãnh chúa và nông nô, trong đó ruộng đất là tư liệu sản xuất chính do lãnh chúa nắm giữ.",
+      ex: "Sous la féodalité, les paysans devaient travailler la terre du seigneur." },
+    { vn: "Thuộc địa", fr: "colonie", subject: "Lịch sử", unit: "Bài 8 — Chủ nghĩa thực dân",
+      def: "Vùng lãnh thổ bị một quốc gia khác chiếm đóng và cai trị, thường bị khai thác về kinh tế và chịu sự áp đặt về chính trị, văn hóa.",
+      ex: "Le Việt Nam a été une colonie française de 1858 à 1945." },
+    { vn: "Khởi nghĩa", fr: "insurrection", subject: "Lịch sử", unit: "Bài 6 — Phong trào đấu tranh giành độc lập",
+      def: "Cuộc nổi dậy có vũ trang của quần chúng nhân dân nhằm lật đổ chính quyền thống trị hoặc chống lại ách áp bức.",
+      ex: "L'insurrection a éclaté après l'annonce des nouvelles taxes." },
+    { vn: "Hiệp ước", fr: "traité", subject: "Lịch sử", unit: "Bài 9 — Quan hệ quốc tế",
+      def: "Văn bản pháp lý được ký kết giữa hai hay nhiều quốc gia, quy định quyền và nghĩa vụ của các bên về một vấn đề cụ thể.",
+      ex: "Le traité a été signé par les représentants des deux pays." },
+    { vn: "Chủ nghĩa đế quốc", fr: "impérialisme", subject: "Lịch sử", unit: "Bài 7 — Thế giới cuối thế kỷ XIX",
+      def: "Chính sách mở rộng quyền lực và ảnh hưởng của một quốc gia thông qua xâm chiếm lãnh thổ, kiểm soát kinh tế hoặc quân sự đối với các nước khác.",
+      ex: "L'impérialisme européen s'est étendu en Afrique et en Asie au XIXe siècle." },
+    { vn: "Khí hậu", fr: "climat", subject: "Địa lý", unit: "Bài 2 — Khí quyển và khí hậu",
+      def: "Đặc điểm thời tiết trung bình của một khu vực được quan trắc trong thời gian dài, bao gồm nhiệt độ, lượng mưa, độ ẩm và gió.",
+      ex: "Le climat tropical se caractérise par des températures élevées toute l'année." },
+    { vn: "Lưu vực sông", fr: "bassin fluvial", subject: "Địa lý", unit: "Bài 4 — Thủy văn",
+      def: "Vùng đất mà toàn bộ nước mưa và nước chảy tràn trên bề mặt đều đổ về một con sông chính và các phụ lưu của nó.",
+      ex: "Le bassin fluvial du Mékong traverse plusieurs pays d'Asie du Sud-Est." },
+    { vn: "Đô thị hóa", fr: "urbanisation", subject: "Địa lý", unit: "Bài 9 — Dân cư và đô thị",
+      def: "Quá trình gia tăng tỷ lệ dân số sống tại khu vực đô thị, gắn liền với sự mở rộng không gian và biến đổi kinh tế - xã hội của thành phố.",
+      ex: "L'urbanisation rapide entraîne une forte pression sur les infrastructures." },
+    { vn: "Tài nguyên tái tạo", fr: "ressource renouvelable", subject: "Địa lý", unit: "Bài 6 — Môi trường và tài nguyên",
+      def: "Loại tài nguyên có khả năng tự phục hồi theo thời gian hoặc thông qua các chu trình tự nhiên, ví dụ như năng lượng mặt trời, gió, nước.",
+      ex: "L'énergie solaire est une ressource renouvelable de plus en plus utilisée." },
+    { vn: "Xói mòn đất", fr: "érosion des sols", subject: "Địa lý", unit: "Bài 3 — Địa hình bề mặt Trái Đất",
+      def: "Hiện tượng lớp đất bề mặt bị bào mòn, cuốn trôi do tác động của nước, gió hoặc hoạt động của con người.",
+      ex: "La déforestation accélère l'érosion des sols dans les zones montagneuses." },
+    { vn: "Biến đổi khí hậu", fr: "changement climatique", subject: "Địa lý", unit: "Bài 2 — Khí quyển và khí hậu",
+      def: "Sự thay đổi lâu dài về nhiệt độ và các hình thái thời tiết trên Trái Đất, phần lớn do hoạt động của con người gây ra kể từ giữa thế kỷ XX.",
+      ex: "Le changement climatique provoque la fonte des glaciers et la montée des eaux." },
+  ];
+
+  // ============================================================
+  // LOGIC TRA CỨU — không cần chỉnh sửa phần này
+  // ============================================================
+  const searchInput = document.getElementById('search');
+  const resultsEl = document.getElementById('results');
+  const countEl = document.getElementById('count');
+  const chips = document.querySelectorAll('.chip');
+
+  let activeFilter = 'all';
+
+  function normalize(str) {
+    return str
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/đ/g, 'd');
+  }
+
+  function render() {
+    const q = normalize(searchInput.value.trim());
+    const filtered = DATA.filter(item => {
+      const matchesFilter = activeFilter === 'all' || item.subject === activeFilter;
+      if (!matchesFilter) return false;
+      if (!q) return true;
+      const haystack = normalize(item.vn + ' ' + item.fr + ' ' + item.def + ' ' + item.unit);
+      return haystack.includes(q);
+    });
+
+    countEl.textContent = filtered.length + ' thuật ngữ';
+
+    if (filtered.length === 0) {
+      resultsEl.innerHTML = '';
+      const empty = document.createElement('div');
+      empty.className = 'empty';
+      empty.innerHTML = '<p>Không tìm thấy thuật ngữ phù hợp</p><p>Thử từ khóa khác, hoặc chọn "Tất cả" để xem toàn bộ danh mục.</p>';
+      resultsEl.appendChild(empty);
+      return;
+    }
+
+    resultsEl.innerHTML = filtered.map(item => {
+      const subjClass = item.subject === 'Địa lý' ? 'geo' : 'histoire';
+      return `
+        <article class="card ${subjClass}">
+          <div class="card-top">
+            <div class="terms">
+              <h2>${escapeHtml(item.vn)} <span class="fr">— ${escapeHtml(item.fr)}</span></h2>
+            </div>
+            <span class="tag">${escapeHtml(item.subject)} · ${escapeHtml(item.unit.split('—')[0].trim())}</span>
+          </div>
+          <p class="def">${escapeHtml(item.def)}</p>
+          <p class="example">${escapeHtml(item.ex)}</p>
+        </article>
+      `;
+    }).join('');
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  searchInput.addEventListener('input', render);
+
+  chips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      chips.forEach(c => c.setAttribute('aria-pressed', 'false'));
+      chip.setAttribute('aria-pressed', 'true');
+      activeFilter = chip.dataset.filter;
+      render();
+    });
+  });
+
+  render();
+</script>
+</body>
+</html>
