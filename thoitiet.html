@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Thời tiết thế giới</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:linear-gradient(160deg,#0b1220,#17263d);color:#eaf2ff;min-height:100vh;padding:24px 16px 48px}
+.container{max-width:1100px;margin:auto}
+h1{margin:0 0 6px;font-size:28px}
+.subtitle{margin:0 0 22px;color:#a8bdd8}
+.search-box{display:flex;gap:10px;margin-bottom:14px}
+input{flex:1;padding:14px 16px;border-radius:12px;border:1px solid #33507a;background:#0f1a2b;color:#fff;font-size:16px;outline:none}
+input:focus{border-color:#6ea8fe}
+button{padding:14px 18px;border:0;border-radius:12px;background:#2f7df6;color:#fff;font-size:15px;font-weight:600;cursor:pointer}
+button:hover{background:#2569d6}
+button.ghost{background:rgba(255,255,255,.1)}
+.status{min-height:24px;color:#ffb4b4;margin-bottom:14px}
+.card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:20px;margin-bottom:18px}
+.current{display:flex;flex-wrap:wrap;gap:20px;align-items:center;justify-content:space-between}
+.place{font-size:22px;font-weight:700}
+.temp{font-size:54px;font-weight:800;line-height:1}
+.desc{color:#b9cbe4;margin-top:6px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-top:18px}
+.metric{background:rgba(255,255,255,.07);border-radius:12px;padding:12px}
+.metric span{display:block;color:#9fb4cf;font-size:13px}
+.metric strong{font-size:18px}
+.days{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px}
+.day{text-align:center;background:rgba(255,255,255,.07);border-radius:14px;padding:14px 10px}
+.day .emoji{font-size:28px}
+.day .name{font-weight:700;margin-bottom:6px}
+.favorites{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+.chip{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.16);padding:8px 12px;border-radius:999px;cursor:pointer}
+.chip:hover{background:rgba(255,255,255,.16)}
+.chip button{background:transparent;color:#ff9a9a;padding:0;font-weight:800}
+#map{height:430px;border-radius:16px;border:1px solid rgba(255,255,255,.15)}
+.hidden{display:none}
+.row{display:grid;grid-template-columns:1fr;gap:18px}
+@media(min-width:900px){.row{grid-template-columns:1.1fr .9fr}}
+footer{text-align:center;color:#7f93ad;font-size:13px;margin-top:28px}
+footer a{color:#8ab4f8}
+.leaflet-container{background:#0f1a2b}
+.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#122033;color:#eaf2ff}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>🌍 Tra cứu thời tiết thế giới</h1>
+<p class="subtitle">Tìm địa điểm, xem bản đồ và lưu những nơi bạn theo dõi thường xuyên.</p>
+
+<div class="search-box">
+<input id="search" placeholder="Ví dụ: Hà Nội, Tokyo, Paris, New York..." autocomplete="off" />
+<button onclick="searchWeather()">Tìm kiếm</button>
+<button class="ghost" onclick="useMyLocation()">📍 Vị trí của tôi</button>
+</div>
+
+<div id="status" class="status"></div>
+
+<div id="favoritesBox" class="favorites"></div>
+
+<div id="result" class="hidden"></div>
+
+<div class="card">
+<h2 style="margin-top:0">🗺️ Bản đồ thời tiết</h2>
+<p style="color:#a8bdd8;margin-top:0">Nhấp vào bản đồ để xem thời tiết tại điểm đó. Các địa điểm yêu thích được đánh dấu màu vàng.</p>
+<div id="map"></div>
+</div>
+
+<footer>Dữ liệu từ <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> · Bản đồ từ <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>.</footer>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const GEO_URL="https://geocoding-api.open-meteo.com/v1/search";
+const WEATHER_URL="https://api.open-meteo.com/v1/forecast";
+const weatherInfo={0:["☀️","Trời quang"],1:["🌤️","Ít mây"],2:["⛅","Có mây"],3:["☁️","Nhiều mây"],45:["🌫️","Sương mù"],48:["🌫️","Sương mù đóng băng"],51:["🌦️","Mưa phùn nhẹ"],53:["🌦️","Mưa phùn"],55:["🌧️","Mưa phùn dày"],61:["🌦️","Mưa nhẹ"],63:["🌧️","Mưa"],65:["🌧️","Mưa lớn"],71:["🌨️","Tuyết nhẹ"],73:["🌨️","Tuyết"],75:["❄️","Tuyết lớn"],77:["🌨️","Hạt tuyết"],80:["🌦️","Mưa rào nhẹ"],81:["🌧️","Mưa rào"],82:["⛈️","Mưa rào rất lớn"],85:["🌨️","Mưa tuyết nhẹ"],86:["🌨️","Mưa tuyết"],95:["⛈️","Dông"],96:["⛈️","Dông kèm mưa đá"],99:["⛈️","Dông mạnh kèm mưa đá"]};
+
+const input=document.getElementById("search");
+const statusEl=document.getElementById("status");
+const resultEl=document.getElementById("result");
+const favoritesBox=document.getElementById("favoritesBox");
+let favorites=JSON.parse(localStorage.getItem("favoritePlaces")||"[]");
+let currentPlace=null;
+let map=L.map("map").setView([20,0],2);
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:'&copy; OpenStreetMap contributors'}).addTo(map);
+let marker=null;
+
+input.addEventListener("keydown",e=>{if(e.key==="Enter")searchWeather()});
+renderFavorites();
+
+async function searchWeather(){
+ const query=input.value.trim();
+ if(!query){setStatus("Vui lòng nhập tên địa điểm.","#ffb4b4");return}
+ setStatus("Đang tìm địa điểm...","#a8bdd8");
+ try{
+  const res=await fetch(`${GEO_URL}?name=${encodeURIComponent(query)}&count=1&language=vi&format=json`);
+  const data=await res.json();
+  if(!data.results||!data.results.length){setStatus("Không tìm thấy địa điểm. Hãy thử tên khác.","#ffb4b4");return}
+  await loadWeather(data.results[0]);
+ }catch(e){setStatus("Không tải được dữ liệu. Vui lòng thử lại.","#ffb4b4")}
+}
+
+async function useMyLocation(){
+ if(!navigator.geolocation){setStatus("Trình duyệt không hỗ trợ định vị.","#ffb4b4");return}
+ setStatus("Đang xác định vị trí...","#a8bdd8");
+ navigator.geolocation.getCurrentPosition(async pos=>{
+  const place={name:"Vị trí của tôi",latitude:pos.coords.latitude,longitude:pos.coords.longitude,country:"",admin1:""};
+  await loadWeather(place);
+ },()=>setStatus("Không thể truy cập vị trí. Hãy cấp quyền định vị.","#ffb4b4"),{enableHighAccuracy:true,timeout:10000});
+}
+
+async function loadWeather(place){
+ currentPlace=place;
+ setStatus("Đang tải dữ liệu thời tiết...","#a8bdd8");
+ try{
+  const url=new URL(WEATHER_URL);
+  url.searchParams.set("latitude",place.latitude);
+  url.searchParams.set("longitude",place.longitude);
+  url.searchParams.set("current","temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,precipitation");
+  url.searchParams.set("daily","weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max");
+  url.searchParams.set("timezone","auto");
+  url.searchParams.set("forecast_days","7");
+  const res=await fetch(url);
+  const weather=await res.json();
+  renderWeather(place,weather);
+  showOnMap(place,weather);
+  setStatus("","#a8bdd8");
+ }catch(e){setStatus("Không tải được dữ liệu thời tiết.","#ffb4b4")}
+}
+
+function renderWeather(place,weather){
+ const c=weather.current,d=weather.daily;
+ const [emoji,description]=weatherInfo[c.weather_code]||["🌡️","Không xác định"];
+ const placeName=place.name+(place.admin1?", "+place.admin1:"")+(place.country?", "+place.country:"");
+ const saved=isFavorite(place);
+ const dayCards=d.time.map((date,i)=>{
+  const [dayEmoji]=weatherInfo[d.weather_code[i]]||["🌡️"];
+  const dayName=new Date(date).toLocaleDateString("vi-VN",{weekday:"short",day:"2-digit",month:"2-digit"});
+  return `<div class="day"><div class="name">${dayName}</div><div class="emoji">${dayEmoji}</div><div><strong>${Math.round(d.temperature_2m_max[i])}°</strong></div><div>${Math.round(d.temperature_2m_min[i])}°</div><div>💧 ${d.precipitation_probability_max[i]??0}%</div></div>`;
+ }).join("");
+
+ resultEl.innerHTML=`
+ <div class="card">
+  <div class="current">
+   <div>
+    <div class="place">${placeName}</div>
+    <div class="desc">${emoji} ${description}</div>
+   </div>
+   <div style="text-align:right">
+    <div class="temp">${Math.round(c.temperature_2m)}°C</div>
+    <button class="ghost" style="margin-top:10px" onclick="toggleFavorite()">${saved?"★ Đã lưu":"☆ Lưu yêu thích"}</button>
+   </div>
+  </div>
+  <div class="grid">
+   <div class="metric"><span>Cảm giác như</span><strong>${Math.round(c.apparent_temperature)}°C</strong></div>
+   <div class="metric"><span>Độ ẩm</span><strong>${c.relative_humidity_2m}%</strong></div>
+   <div class="metric"><span>Gió</span><strong>${c.wind_speed_10m} km/h</strong></div>
+   <div class="metric"><span>Mưa hiện tại</span><strong>${c.precipitation} mm</strong></div>
+   <div class="metric"><span>Múi giờ</span><strong>${weather.timezone}</strong></div>
+  </div>
+ </div>
+ <div class="card"><h2 style="margin-top:0">Dự báo 7 ngày</h2><div class="days">${dayCards}</div></div>`;
+ resultEl.classList.remove("hidden");
+}
+
+function showOnMap(place,weather){
+ const lat=Number(place.latitude),lon=Number(place.longitude);
+ const [emoji,description]=weatherInfo[weather.current.weather_code]||["🌡️","Không xác định"];
+ if(marker)map.removeLayer(marker);
+ marker=L.marker([lat,lon]).addTo(map).bindPopup(`<strong>${place.name}</strong><br>${emoji} ${description}<br>${Math.round(weather.current.temperature_2m)}°C`).openPopup();
+ map.setView([lat,lon],9);
+}
+
+function setStatus(text,color){statusEl.textContent=text;statusEl.style.color=color||"#a8bdd8"}
+
+function isFavorite(place){
+ return favorites.some(f=>Math.abs(f.latitude-place.latitude)<.001&&Math.abs(f.longitude-place.longitude)<.001);
+}
+
+function toggleFavorite(){
+ if(!currentPlace)return;
+ if(isFavorite(currentPlace)){
+  favorites=favorites.filter(f=>!(Math.abs(f.latitude-currentPlace.latitude)<.001&&Math.abs(f.longitude-currentPlace.longitude)<.001));
+ }else{
+  favorites.push({name:currentPlace.name,admin1:currentPlace.admin1||"",country:currentPlace.country||"",latitude:currentPlace.latitude,longitude:currentPlace.longitude});
+ }
+ localStorage.setItem("favoritePlaces",JSON.stringify(favorites));
+ renderFavorites();
+ renderWeather(currentPlace,currentWeatherCache);
+}
+
+let currentWeatherCache=null;
+const originalRenderWeather=renderWeather;
+renderWeather=function(place,weather){currentWeatherCache=weather;originalRenderWeather(place,weather)};
+
+function renderFavorites(){
+ if(!favorites.length){favoritesBox.innerHTML=`<div style="color:#9fb4cf">Chưa có địa điểm yêu thích. Tìm một nơi rồi nhấn “☆ Lưu yêu thích”.</div>`;return}
+ favoritesBox.innerHTML=favorites.map((f,i)=>`<span class="chip" onclick="loadWeather(favorites[${i}])">${f.name}${f.country?", "+f.country:""} <button onclick="event.stopPropagation();removeFavorite(${i})">✕</button></span>`).join("");
+}
+
+function removeFavorite(i){
+ favorites.splice(i,1);
+ localStorage.setItem("favoritePlaces",JSON.stringify(favorites));
+ renderFavorites();
+}
+
+map.on("click",async e=>{
+ setStatus("Đang tải thời tiết cho vị trí đã chọn...","#a8bdd8");
+ try{
+  const res=await fetch(`${WEATHER_URL}?latitude=${e.latlng.lat}&longitude=${e.latlng.lng}&current=temperature_2m,weather_code&timezone=auto`);
+  const weather=await res.json();
+  const [emoji,description]=weatherInfo[weather.current.weather_code]||["🌡️","Không xác định"];
+  const place={name:`${e.latlng.lat.toFixed(3)}, ${e.latlng.lng.toFixed(3)}`,admin1:"",country:"",latitude:e.latlng.lat,longitude:e.latlng.lng};
+  await loadWeather(place);
+ }catch(err){setStatus("Không tải được thời tiết cho vị trí này.","#ffb4b4")}
+});
+</script>
+</body>
+</html>
